@@ -2,15 +2,44 @@ package com.example.learn_opentok_android;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+import com.opentok.android.Session;
+import com.opentok.android.Stream;
+import com.opentok.android.OpentokError;
+
+public class MainActivity extends AppCompatActivity implements Session.SessionListener{
+
+    public String TAG = "MainActivity";
+
+    private String mApiKey;
+    private String mSessionId;
+    private String mToken;
+    private Session mSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // TODO: Use a WEB SERVICE to get the sessionid, apikey, token
+        mSessionId = ApiConfig.mSessionID;
+        mToken = ApiConfig.mToken;
+        mApiKey = ApiConfig.mApiKey;
+
+        initializeSession();
+    }
+
+    private void initializeSession() {
+        mSession = new Session(this, mApiKey, mSessionId);
+        mSession.setSessionListener(this);
+        mSession.connect(mToken);
+    }
+    private void logOpenTokError(OpentokError opentokError) {
+        Log.e(TAG, "Error Domain: " + opentokError.getErrorDomain().name());
+        Log.e(TAG, "Error Code: " + opentokError.getErrorCode().name());
     }
 
     @Override
@@ -33,5 +62,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /* Session Listener methods */
+
+    @Override
+    public void onConnected(Session session) {
+        Log.i(TAG, "Session Connected");
+    }
+
+    @Override
+    public void onDisconnected(Session session) {
+        Log.i(TAG, "Session Disconnected");
+    }
+
+    @Override
+    public void onStreamReceived(Session session, Stream stream) {
+        Log.i(TAG, "Stream Received");
+    }
+
+    @Override
+    public void onStreamDropped(Session session, Stream stream) {
+        Log.i(TAG, "Stream Dropped");
+    }
+
+    @Override
+    public void onError(Session session, OpentokError opentokError) {
+        logOpenTokError(opentokError);
     }
 }
