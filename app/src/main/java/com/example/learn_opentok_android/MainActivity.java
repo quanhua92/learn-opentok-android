@@ -5,24 +5,44 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
 
+import com.opentok.android.BaseVideoCapturer;
+import com.opentok.android.BaseVideoRenderer;
+import com.opentok.android.Publisher;
+import com.opentok.android.PublisherKit;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.OpentokError;
+import com.opentok.android.Subscriber;
+import com.opentok.android.SubscriberKit;
 
-public class MainActivity extends AppCompatActivity implements Session.SessionListener{
+public class MainActivity extends AppCompatActivity implements Session.SessionListener, PublisherKit.PublisherListener, SubscriberKit.SubscriberListener{
 
-    public String TAG = "MainActivity";
+    public String TAG = MainActivity.class.getSimpleName();
 
     private String mApiKey;
     private String mSessionId;
     private String mToken;
     private Session mSession;
 
+
+    private Publisher mPublisher;
+    private Subscriber mSubscriber;
+
+    private FrameLayout mPublisherViewContainer;
+    private FrameLayout mSubscriberViewContainer;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mPublisherViewContainer = (FrameLayout)findViewById(R.id.publisher_container);
+        mSubscriberViewContainer = (FrameLayout)findViewById(R.id.subscriber_container);
+
 
         // TODO: Use a WEB SERVICE to get the sessionid, apikey, token
         mSessionId = ApiConfig.mSessionID;
@@ -30,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         mApiKey = ApiConfig.mApiKey;
 
         initializeSession();
+        initializePublisher();
     }
 
     private void initializeSession() {
@@ -37,6 +58,15 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         mSession.setSessionListener(this);
         mSession.connect(mToken);
     }
+
+    private void initializePublisher() {
+        mPublisher = new Publisher(this);
+        mPublisher.setPublisherListener(this);
+        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mPublisherViewContainer.addView(mPublisher.getView());
+    }
+
     private void logOpenTokError(OpentokError opentokError) {
         Log.e(TAG, "Error Domain: " + opentokError.getErrorDomain().name());
         Log.e(TAG, "Error Code: " + opentokError.getErrorCode().name());
@@ -69,6 +99,10 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     public void onConnected(Session session) {
         Log.i(TAG, "Session Connected");
+
+        if (mPublisher != null) {
+            mSession.publish(mPublisher);
+        }
     }
 
     @Override
@@ -79,15 +113,64 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TAG, "Stream Received");
+
+        if (mSubscriber == null) {
+            mSubscriber = new Subscriber(this, stream);
+            mSubscriber.setSubscriberListener(this);
+            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+            mSession.subscribe(mSubscriber);
+        }
     }
 
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TAG, "Stream Dropped");
+
+        if (mSubscriber != null) {
+            mSubscriber = null;
+            mSubscriberViewContainer.removeAllViews();
+        }
     }
 
     @Override
     public void onError(Session session, OpentokError opentokError) {
+        logOpenTokError(opentokError);
+    }
+
+    /* Publisher Listener methods */
+
+    @Override
+    public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
+        Log.i(TAG, "Publisher Stream Created");
+    }
+
+    @Override
+    public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
+        Log.i(TAG, "Publisher Stream Destroyed");
+    }
+
+    @Override
+    public void onError(PublisherKit publisherKit, OpentokError opentokError) {
+        logOpenTokError(opentokError);
+    }
+
+    /* Subscriber Listener methods */
+
+    @Override
+    public void onConnected(SubscriberKit subscriberKit) {
+        Log.i(TAG, "Subscriber Connected");
+
+        mSubscriberViewContainer.addView(mSubscriber.getView());
+    }
+
+    @Override
+    public void onDisconnected(SubscriberKit subscriberKit) {
+        Log.i(TAG, "Subscriber Disconnected");
+    }
+
+    @Override
+    public void onError(SubscriberKit subscriberKit, OpentokError opentokError) {
         logOpenTokError(opentokError);
     }
 }
