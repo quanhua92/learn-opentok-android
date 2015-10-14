@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
     private void initializePublisher() {
         mPublisher = new Publisher(this);
+        mPublisher.setCapturer(new CustomVideoCapturer(MainActivity.this));
         mPublisher.setPublisherListener(this);
         mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
