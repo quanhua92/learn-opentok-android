@@ -1,11 +1,18 @@
 package com.example.learn_opentok_android;
 
+import android.hardware.usb.UsbDevice;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.opentok.android.BaseVideoCapturer;
 import com.opentok.android.BaseVideoRenderer;
@@ -16,8 +23,17 @@ import com.opentok.android.Stream;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
+import com.serenegiant.usb.CameraDialog;
+import com.serenegiant.usb.IFrameCallback;
+import com.serenegiant.usb.USBMonitor;
+import com.serenegiant.usb.UVCCamera;
 
-public class MainActivity extends AppCompatActivity implements Session.SessionListener, PublisherKit.PublisherListener, SubscriberKit.SubscriberListener{
+import java.nio.ByteBuffer;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class MainActivity extends AppCompatActivity implements Session.SessionListener, PublisherKit.PublisherListener, SubscriberKit.SubscriberListener, CameraDialog.CameraDialogParent{
 
     public String TAG = MainActivity.class.getSimpleName();
 
@@ -33,12 +49,14 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     private FrameLayout mPublisherViewContainer;
     private FrameLayout mSubscriberViewContainer;
 
-
+    private CustomWebcamCapturer mCapturer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mCapturer = new CustomWebcamCapturer(this);
 
         mPublisherViewContainer = (FrameLayout)findViewById(R.id.publisher_container);
         mSubscriberViewContainer = (FrameLayout)findViewById(R.id.subscriber_container);
@@ -61,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
     private void initializePublisher() {
         mPublisher = new Publisher(this);
-        mPublisher.setCapturer(new CustomVideoCapturer(MainActivity.this));
+        mPublisher.setCapturer(mCapturer);
         mPublisher.setPublisherListener(this);
         mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
@@ -173,5 +191,10 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     public void onError(SubscriberKit subscriberKit, OpentokError opentokError) {
         logOpenTokError(opentokError);
+    }
+
+    @Override
+    public USBMonitor getUSBMonitor() {
+        return mCapturer.getUSBMonitor();
     }
 }
