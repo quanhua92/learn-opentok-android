@@ -348,13 +348,13 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             while(true){
 
                 byte[] capArray = null;
-//                imageArrayLock.lock();
+                imageArrayLock.lock();
                 Log.d(TAG, "MyThread run() Lock");
                 if(lastCameraTime != imageTime){
                     lastCameraTime = System.currentTimeMillis();
                     capArray = imageArray;
                 }
-//                imageArrayLock.unlock();
+                imageArrayLock.unlock();
                 mCapturer.addFrame(capArray);
                 try {
                     Thread.sleep(10);
@@ -403,17 +403,11 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     private final IFrameCallback mIFrameCallback = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
-//            imageArrayLock.lock();
+            imageArrayLock.lock();
 
-            Log.d(TAG, "onFrame Lock before");
-            if(frame == null){
-                Log.d(TAG, "onFrame Lock before frame == null");
-            }else{
-                Log.d(TAG, "onFrame Lock before frame != null");
-            }
             imageArray = new byte[frame.remaining()];
             frame.get(imageArray);
-//            imageArray = frame.array().clone();
+
             if(imageArray == null){
                 Log.d(TAG, "onFrame Lock NULL");
             }else{
@@ -421,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             }
 
             imageTime = System.currentTimeMillis();
-//            imageArrayLock.unlock();
+            imageArrayLock.unlock();
         }
     };
 }

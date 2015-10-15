@@ -114,7 +114,6 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
             while(true){
                 mPreviewBufferLock.lock();
                 if(imageData != null){
-                    Log.d(LOGTAG, "Has frame: " + isCaptureRunning);
                     if (isCaptureRunning) {
                         Log.d(LOGTAG, "Has frame");
                         provideByteArrayFrame(imageData, NV21, mCaptureWidth,
