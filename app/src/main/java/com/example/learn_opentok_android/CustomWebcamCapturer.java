@@ -34,8 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by quanhua on 14/10/2015.
  */
-public class CustomWebcamCapturer extends BaseVideoCapturer implements
-        Camera.PreviewCallback {
+public class CustomWebcamCapturer extends BaseVideoCapturer {
     private final static String LOGTAG = "customer-video-capturer";
     private Context context;
 
@@ -65,32 +64,27 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
     public CustomWebcamCapturer(Context context) {
         // Initialize front camera by default
 
+        Log.d(LOGTAG, "CustomWebcamCapturer constructor");
+
         this.context = context;
 
         // Get current display to query UI orientation
         WindowManager windowManager = (WindowManager) context
                 .getSystemService(Context.WINDOW_SERVICE);
         mCurrentDisplay = windowManager.getDefaultDisplay();
-
-        mUVCCameraView = (SurfaceView) ((Activity)context).findViewById(R.id.camera_surface_view);
-        mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
-
-        mUSBMonitor = new USBMonitor(context, mOnDeviceConnectListener);
     }
 
     public void addFrame(byte[] data){
         Log.d(LOGTAG, "addFrame");
 
-        mPreviewBufferLock.lock();
-        Log.d(LOGTAG, "Has frame: " + isCaptureRunning);
-        if (isCaptureRunning) {
-            Log.d(LOGTAG, "Has frame");
-            provideByteArrayFrame(data, NV21, mCaptureWidth,
-                    mCaptureHeight, 0, false);
+        if(data == null){
+            Log.d(LOGTAG, "hasFrame DATA NULL");
+            return;
         }
+        Log.d(LOGTAG, "hasFrame");
+        mPreviewBufferLock.lock();
+        imageData = data;
         mPreviewBufferLock.unlock();
-
-        currentCaptureFrame = System.currentTimeMillis();
     }
 
     @Override
@@ -99,6 +93,8 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
             return -1;
         }
 
+        Log.d(LOGTAG, "startCapture");
+
         mPreviewBufferLock.lock();
         isCaptureRunning = true;
         mPreviewBufferLock.unlock();
@@ -106,18 +102,35 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
         isCaptureStarted = true;
 
 
-        if (mUVCCamera == null) {
-            // XXX calling CameraDialog.showDialog is necessary at only first time(only when app has no permission).
-            CameraDialog.showDialog((Activity)context);
-        } else {
-            synchronized (mSync) {
-                mUVCCamera.destroy();
-                mUVCCamera = null;
-                isActive = isPreview = false;
+        new Thread(new MyThread()).start();
+        return 0;
+    }
+
+    private byte[] imageData = null;
+
+    private class MyThread implements Runnable{
+        @Override
+        public void run() {
+            while(true){
+                mPreviewBufferLock.lock();
+                if(imageData != null){
+                    Log.d(LOGTAG, "Has frame: " + isCaptureRunning);
+                    if (isCaptureRunning) {
+                        Log.d(LOGTAG, "Has frame");
+                        provideByteArrayFrame(imageData, NV21, mCaptureWidth,
+                                mCaptureHeight, 0, false);
+                    }
+                    currentCaptureFrame = System.currentTimeMillis();
+                }
+                mPreviewBufferLock.unlock();
+
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
-
-        return 0;
     }
 
     @Override
@@ -129,20 +142,6 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
     @Override
     public void destroy() {
         stopCapture();
-
-        synchronized (mSync) {
-            if (mUVCCamera != null) {
-                mUVCCamera.destroy();
-                mUVCCamera = null;
-            }
-            isActive = isPreview = false;
-        }
-        if (mUSBMonitor != null) {
-            mUSBMonitor.destroy();
-            mUSBMonitor = null;
-        }
-        mUVCCameraView = null;
-        mCameraButton = null;
     }
 
     @Override
@@ -168,13 +167,14 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
     @Override
     public void onPause() {
 
-        mUSBMonitor.unregister();
+
     }
 
     @Override
     public void onResume() {
-        mUSBMonitor.register();
+
     }
+
 
     private void configureCaptureSize(int preferredWidth, int preferredHeight) {
 
@@ -189,148 +189,4 @@ public class CustomWebcamCapturer extends BaseVideoCapturer implements
 
     }
 
-    @Override
-    public void onPreviewFrame(byte[] data, Camera camera) {
-        mPreviewBufferLock.lock();
-        if (isCaptureRunning && lastCaptureFrame < currentCaptureFrame) {
-            Log.d(LOGTAG, "Has frame");
-//            // Send frame to OpenTok
-//            provideByteArrayFrame(data, NV21, mCaptureWidth,
-//                    mCaptureHeight, currentRotation, isFrontCamera());
-        }
-        mPreviewBufferLock.unlock();
-    }
-
-    // for thread pool
-    private static final int CORE_POOL_SIZE = 1;		// initial/minimum threads
-    private static final int MAX_POOL_SIZE = 4;			// maximum threads
-    private static final int KEEP_ALIVE_TIME = 10;		// time periods while keep the idle thread
-    protected static final ThreadPoolExecutor EXECUTER
-            = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME,
-            TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-
-    private final Object mSync = new Object();
-    // for accessing USB and USB camera
-    private USBMonitor mUSBMonitor;
-    private UVCCamera mUVCCamera;
-    private SurfaceView mUVCCameraView;
-    // for open&start / stop&close camera preview
-    private ImageButton mCameraButton;
-    private Surface mPreviewSurface;
-    private boolean isActive, isPreview;
-
-    private final USBMonitor.OnDeviceConnectListener mOnDeviceConnectListener = new USBMonitor.OnDeviceConnectListener() {
-        @Override
-        public void onAttach(final UsbDevice device) {
-            Toast.makeText(context, "USB_DEVICE_ATTACHED", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onConnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock, final boolean createNew) {
-            synchronized (mSync) {
-                if (mUVCCamera != null)
-                    mUVCCamera.destroy();
-                isActive = isPreview = false;
-            }
-            EXECUTER.execute(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (mSync) {
-                        mUVCCamera = new UVCCamera();
-                        mUVCCamera.open(ctrlBlock);
-
-                        try {
-                            mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
-                        } catch (final IllegalArgumentException e) {
-                            try {
-                                // fallback to YUV mode
-                                mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
-                            } catch (final IllegalArgumentException e1) {
-                                mUVCCamera.destroy();
-                                mUVCCamera = null;
-                            }
-                        }
-                        if ((mUVCCamera != null) && (mPreviewSurface != null)) {
-                            isActive = true;
-                            mUVCCamera.setPreviewDisplay(mPreviewSurface);
-                            mUVCCamera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
-                            mUVCCamera.startPreview();
-                            isPreview = true;
-                        }
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onDisconnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock) {
-            // XXX you should check whether the comming device equal to camera device that currently using
-            synchronized (mSync) {
-                if (mUVCCamera != null) {
-                    mUVCCamera.close();
-                    if (mPreviewSurface != null) {
-                        mPreviewSurface.release();
-                        mPreviewSurface = null;
-                    }
-                    isActive = isPreview = false;
-                }
-            }
-        }
-
-        @Override
-        public void onDettach(final UsbDevice device) {
-
-            Toast.makeText(context, "USB_DEVICE_DETACHED", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onCancel() {
-        }
-    };
-
-    /**
-     * to access from CameraDialog
-     * @return
-     */
-    public USBMonitor getUSBMonitor() {
-        return mUSBMonitor;
-    }
-
-    private final SurfaceHolder.Callback mSurfaceViewCallback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(final SurfaceHolder holder) {
-        }
-
-        @Override
-        public void surfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
-            if ((width == 0) || (height == 0)) return;
-
-            mPreviewSurface = holder.getSurface();
-            synchronized (mSync) {
-                if (isActive && !isPreview) {
-                    mUVCCamera.setPreviewDisplay(mPreviewSurface);
-                    mUVCCamera.startPreview();
-                    isPreview = true;
-                }
-            }
-        }
-
-        @Override
-        public void surfaceDestroyed(final SurfaceHolder holder) {
-
-            synchronized (mSync) {
-                if (mUVCCamera != null) {
-                    mUVCCamera.stopPreview();
-                }
-                isPreview = false;
-            }
-            mPreviewSurface = null;
-        }
-    };
-    private final IFrameCallback mIFrameCallback = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-            addFrame(frame.array());
-        }
-    };
 }
