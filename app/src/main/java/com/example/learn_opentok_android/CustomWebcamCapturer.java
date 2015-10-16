@@ -1,34 +1,11 @@
 package com.example.learn_opentok_android;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
-import android.graphics.PixelFormat;
-import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
-import android.hardware.usb.UsbDevice;
 import android.util.Log;
 import android.view.Display;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageButton;
-import android.widget.Toast;
-
 import com.opentok.android.BaseVideoCapturer;
-import com.serenegiant.usb.CameraDialog;
-import com.serenegiant.usb.IFrameCallback;
-import com.serenegiant.usb.USBMonitor;
-import com.serenegiant.usb.UVCCamera;
-
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -81,10 +58,18 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
             Log.d(LOGTAG, "hasFrame DATA NULL");
             return;
         }
-        Log.d(LOGTAG, "hasFrame");
+
         mPreviewBufferLock.lock();
-        imageData = data;
+        if(data != null){
+            if (isCaptureRunning) {
+                Log.d(LOGTAG, "Has frame");
+                provideByteArrayFrame(data, NV21, mCaptureWidth,
+                        mCaptureHeight, 0, false);
+            }
+            currentCaptureFrame = System.currentTimeMillis();
+        }
         mPreviewBufferLock.unlock();
+
     }
 
     @Override
@@ -101,35 +86,7 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
 
         isCaptureStarted = true;
 
-
-        new Thread(new MyThread()).start();
         return 0;
-    }
-
-    private byte[] imageData = null;
-
-    private class MyThread implements Runnable{
-        @Override
-        public void run() {
-            while(true){
-                mPreviewBufferLock.lock();
-                if(imageData != null){
-                    if (isCaptureRunning) {
-                        Log.d(LOGTAG, "Has frame");
-                        provideByteArrayFrame(imageData, NV21, mCaptureWidth,
-                                mCaptureHeight, 0, false);
-                    }
-                    currentCaptureFrame = System.currentTimeMillis();
-                }
-                mPreviewBufferLock.unlock();
-
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     @Override

@@ -33,5 +33,9 @@
             android:padding="@dimen/publisher_padding"
             android:background="@color/publisher_border_color" />
 
+        <TextView
+            android:id="@+id/errorTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
 </LinearLayout>
