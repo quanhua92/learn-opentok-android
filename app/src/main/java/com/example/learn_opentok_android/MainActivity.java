@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             Log.e(TAG, "Please Add Session, Token, ApiKey to ApiConfig.java");
             TextView tv = (TextView) findViewById(R.id.errorTextView);
             tv.setText("Please Add Session, Token, ApiKey to ApiConfig.java");
-            Toast.makeText(MainActivity.this, "Please Add Session, Token, ApiKey to ApiConfig.java", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Please Add Session, Token, ApiKey to ApiConfig.java", Toast.LENGTH_LONG).show();
             return;
         }
 
