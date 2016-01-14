@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         if (mSubscriber == null) {
             mSubscriber = new Subscriber(this, stream);
             mSubscriber.setSubscriberListener(this);
+            mSubscriber.setRenderer(new BlackWhiteVideoRender(this));
             mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                     BaseVideoRenderer.STYLE_VIDEO_FILL);
             mSession.subscribe(mSubscriber);
