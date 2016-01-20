@@ -1,3 +1,4 @@
+app/src/main/java/com/example/learn_opentok_android/ApiConfig.java
 .gradle
 /local.properties
 /.idea/workspace.xml
@@ -5,3 +6,4 @@
 .DS_Store
 /build
 /captures
+app/src/main/java/com/example/learn_opentok_android/MyApiConfig.java

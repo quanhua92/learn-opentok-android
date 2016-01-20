@@ -1,26 +1,26 @@
-package com.example.learn_opentok_android;
+package com.example.learn_opentok_android.toolkit;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.view.View;
 
+import com.example.learn_opentok_android.GLRendererHelperTok;
 import com.opentok.android.BaseVideoRenderer;
 
 import java.nio.ByteBuffer;
 
 /**
- * Created by quanhua on 14/01/2016.
+ * Created by quanhua on 19/01/2016.
  */
-public class BlackWhiteVideoRender extends BaseVideoRenderer{
+public class DefaultVideoRender extends BaseVideoRenderer {
+    private GLSurfaceView mRenderView;
+    private GLRendererHelper mRenderer;
 
-    GLSurfaceView mRenderView;
-    GLRendererHelperTok mRenderer;
-
-    public BlackWhiteVideoRender(Context context) {
+    public DefaultVideoRender(Context context) {
         mRenderView = new GLSurfaceView(context);
         mRenderView.setEGLContextClientVersion(2);
 
-        mRenderer = new GLRendererHelperTok();
+        mRenderer = new GLRendererHelper(context);
         mRenderView.setRenderer(mRenderer);
 
         mRenderView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
