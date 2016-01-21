@@ -49,7 +49,7 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
 
     protected VideoShaderProgram videoShaderProgram;
 
-    private Video video;
+    private Video video_top, video_bottom;
 
     public GLRendererHelper(Context context) {
         this.context = context;
@@ -65,7 +65,24 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
                 VideoShaderProgram.DEFAULT_VERTEX_SHADER,
                 VideoShaderProgram.DEFAULT_FRAGMENT_SHADER);
 
-        video = new Video(VERTEX_DATA);
+//        video = new Video(VERTEX_DATA);
+        float[] VERTEX_DATA_TOP = {
+                // X, Y, Z, U, V
+                -1.0f, 0f, 0, 0.f, 1.f,
+                1.0f, 0f, 0, 0.5f, 1.f,
+                -1.0f,  1.0f, 0, 0.f, 0.f,
+                1.0f,  1.0f, 0, 0.5f, 0.f,
+        };
+        video_top = new Video(VERTEX_DATA_TOP);
+        float[] VERTEX_DATA_BOTTOM = {
+                // X, Y, Z, U, V
+                -1.0f, -1.0f, 0, 0.5f, 1.f,
+                1.0f, -1.0f, 0, 1f, 1.f,
+                -1.0f,  0f, 0, 0.5f, 0.f,
+                1.0f,  0f, 0, 1f, 0.f,
+        };
+        video_bottom = new Video(VERTEX_DATA_BOTTOM);
+
 
         mTextureWidth = 0;
         mTextureHeight = 0;
@@ -173,8 +190,15 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
             videoShaderProgram.useProgram();
             videoShaderProgram.setUniforms(mMVPMatrix);
 
-            video.bindData(videoShaderProgram);
-            video.draw();
+//            video.bindData(videoShaderProgram);
+//            video.draw();
+
+            video_top.bindData(videoShaderProgram);
+            video_top.draw();
+
+            video_bottom.bindData(videoShaderProgram);
+            video_bottom.draw();
+
         } else {
             GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
