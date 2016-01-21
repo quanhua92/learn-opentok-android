@@ -12,7 +12,6 @@ public class VideoShaderProgram extends ShaderProgram{
 
     // Uniform locations
     private int uMVPMatrixLocation;
-    private int uSTMatrixLocation;
 
     private int uYTexLocation;
     private int uUTexLocation;
@@ -21,9 +20,6 @@ public class VideoShaderProgram extends ShaderProgram{
     // Attribute locations
     private int aPositionLocation;
     private int aTextureCoordinatesLocation;
-
-    // Texture unit
-
 
     public VideoShaderProgram(Context context, int vertexShaderResourceId, int fragmentShaderResourceId) {
         super(context, vertexShaderResourceId, fragmentShaderResourceId);
@@ -34,7 +30,6 @@ public class VideoShaderProgram extends ShaderProgram{
         aTextureCoordinatesLocation = GLES20.glGetAttribLocation(program, A_TEXTURE_COORDINATES);
 
         uMVPMatrixLocation = GLES20.glGetUniformLocation(program, U_MVPMATRIX);
-//        uSTMatrixLocation = GLES20.glGetUniformLocation(program, U_STMATRIX);
 
         uYTexLocation = GLES20.glGetUniformLocation(program, U_YTEX);
         uUTexLocation = GLES20.glGetUniformLocation(program, U_UTEX);
@@ -53,6 +48,5 @@ public class VideoShaderProgram extends ShaderProgram{
         GLES20.glUniform1i(uYTexLocation, 0); /* Bind Ytex to texture unit 0 */
         GLES20.glUniform1i(uUTexLocation, 1); /* Bind Utex to texture unit 1 */
         GLES20.glUniform1i(uVTexLocation, 2); /* Bind Vtex to texture unit 2 */
-//        GLES20.glUniformMatrix4fv(uSTMatrixLocation, 1, false, stMatrix, 0);
     }
 }

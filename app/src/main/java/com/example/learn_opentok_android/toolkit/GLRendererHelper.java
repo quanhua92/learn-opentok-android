@@ -28,18 +28,6 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
     private boolean mVideoFitEnabled = true;
     private boolean mVideoDisabled = false;
 
-    static float mXYZCoords[] = {-1.0f, 1.0f, 0.0f, // top lef
-            -1.0f, -1.0f, 0.0f, // bottom left
-            1.0f, -1.0f, 0.0f, // bottom right
-            1.0f, 1.0f, 0.0f // top right
-    };
-
-    static float mUVCoords[] = {0, 0, // top left
-            0, 1, // bottom left
-            1, 1, // bottom right
-            1, 0}; // top right
-    // vertices
-
     private Context context;
     private ReentrantLock mFrameLock = new ReentrantLock();
     private BaseVideoRenderer.Frame mCurrentFrame;
@@ -53,7 +41,6 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
             -1.0f,  1.0f, 0, 0.f, 0.f,
             1.0f,  1.0f, 0, 1f, 0.f,
     };
-
 
     private int mViewportWidth;
     private int mViewportHeight;
@@ -71,8 +58,7 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         gl10.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-//        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
         videoShaderProgram = new VideoShaderProgram(
                 context,
@@ -80,7 +66,6 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
                 VideoShaderProgram.DEFAULT_FRAGMENT_SHADER);
 
         video = new Video(VERTEX_DATA);
-//        video = new Video(mXYZCoords, mUVCoords);
 
         mTextureWidth = 0;
         mTextureHeight = 0;
