@@ -22,20 +22,30 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by quanhua on 19/01/2016.
  */
 public class GLRendererHelper implements GLSurfaceView.Renderer {
+    int mTextureIds[] = new int[3];
+    float[] mMVPMatrix = new float[16];
+
+    private boolean mVideoFitEnabled = true;
+    private boolean mVideoDisabled = false;
+
+    static float mXYZCoords[] = {-1.0f, 1.0f, 0.0f, // top lef
+            -1.0f, -1.0f, 0.0f, // bottom left
+            1.0f, -1.0f, 0.0f, // bottom right
+            1.0f, 1.0f, 0.0f // top right
+    };
+
+    static float mUVCoords[] = {0, 0, // top left
+            0, 1, // bottom left
+            1, 1, // bottom right
+            1, 0}; // top right
+    // vertices
 
     private Context context;
     private ReentrantLock mFrameLock = new ReentrantLock();
     private BaseVideoRenderer.Frame mCurrentFrame;
 
-    private boolean mVideoFitEnabled = true;
-    private boolean mVideoDisabled = false;
 
-    private ShortBuffer mDrawListBuffer;
-
-    int mTextureIds[] = new int[3];
     // number of coordinates per vertex in this array
-    float[] mMVPMatrix = new float[16];
-
     protected float[] VERTEX_DATA = {
             // X, Y, Z, U, V
             -1.0f, -1.0f, 0, 0.f, 0.f,
@@ -44,8 +54,6 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
             1.0f,  1.0f, 0, 1f, 1.f,
     };
 
-    private short mVertexIndex[] = {0, 1, 2, 0, 2, 3}; // order to draw
-    // vertices
 
     private int mViewportWidth;
     private int mViewportHeight;
@@ -58,30 +66,13 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
 
     public GLRendererHelper(Context context) {
         this.context = context;
-
-//        ByteBuffer bb = ByteBuffer.allocateDirect(mXYZCoords.length * 4);
-//        bb.order(ByteOrder.nativeOrder());
-//        mVertexBuffer = bb.asFloatBuffer();
-//        mVertexBuffer.put(mXYZCoords);
-//        mVertexBuffer.position(0);
-//
-//        ByteBuffer tb = ByteBuffer.allocateDirect(mUVCoords.length * 4);
-//        tb.order(ByteOrder.nativeOrder());
-//        mTextureBuffer = tb.asFloatBuffer();
-//        mTextureBuffer.put(mUVCoords);
-//        mTextureBuffer.position(0);
-
-        ByteBuffer dlb = ByteBuffer.allocateDirect(mVertexIndex.length * 2);
-        dlb.order(ByteOrder.nativeOrder());
-        mDrawListBuffer = dlb.asShortBuffer();
-        mDrawListBuffer.put(mVertexIndex);
-        mDrawListBuffer.position(0);
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+        gl10.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+//        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         videoShaderProgram = new VideoShaderProgram(
                 context,
@@ -89,6 +80,7 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
                 VideoShaderProgram.DEFAULT_FRAGMENT_SHADER);
 
         video = new Video(VERTEX_DATA);
+//        video = new Video(mXYZCoords, mUVCoords);
 
         mTextureWidth = 0;
         mTextureHeight = 0;

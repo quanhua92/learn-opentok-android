@@ -28,21 +28,17 @@ public class VideoShaderProgram extends ShaderProgram{
     public VideoShaderProgram(Context context, int vertexShaderResourceId, int fragmentShaderResourceId) {
         super(context, vertexShaderResourceId, fragmentShaderResourceId);
 
+        useProgram();
+
         aPositionLocation = GLES20.glGetAttribLocation(program, A_POSITION);
         aTextureCoordinatesLocation = GLES20.glGetAttribLocation(program, A_TEXTURE_COORDINATES);
 
         uMVPMatrixLocation = GLES20.glGetUniformLocation(program, U_MVPMATRIX);
-        uSTMatrixLocation = GLES20.glGetUniformLocation(program, U_STMATRIX);
-
+//        uSTMatrixLocation = GLES20.glGetUniformLocation(program, U_STMATRIX);
 
         uYTexLocation = GLES20.glGetUniformLocation(program, U_YTEX);
-        GLES20.glUniform1i(uYTexLocation, 0); /* Bind Ytex to texture unit 0 */
-
         uUTexLocation = GLES20.glGetUniformLocation(program, U_UTEX);
-        GLES20.glUniform1i(uUTexLocation, 1); /* Bind Utex to texture unit 1 */
-
         uVTexLocation = GLES20.glGetUniformLocation(program, U_VTEX);
-        GLES20.glUniform1i(uVTexLocation, 2); /* Bind Vtex to texture unit 2 */
     }
 
     public int getPositionAttributeLocation() {
@@ -54,6 +50,9 @@ public class VideoShaderProgram extends ShaderProgram{
     }
     public void setUniforms(float[] mvpMatrix){
         GLES20.glUniformMatrix4fv(uMVPMatrixLocation, 1, false, mvpMatrix, 0 );
+        GLES20.glUniform1i(uYTexLocation, 0); /* Bind Ytex to texture unit 0 */
+        GLES20.glUniform1i(uUTexLocation, 1); /* Bind Utex to texture unit 1 */
+        GLES20.glUniform1i(uVTexLocation, 2); /* Bind Vtex to texture unit 2 */
 //        GLES20.glUniformMatrix4fv(uSTMatrixLocation, 1, false, stMatrix, 0);
     }
 }
