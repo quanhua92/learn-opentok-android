@@ -48,10 +48,10 @@ public class GLRendererHelper implements GLSurfaceView.Renderer {
     // number of coordinates per vertex in this array
     protected float[] VERTEX_DATA = {
             // X, Y, Z, U, V
-            -1.0f, -1.0f, 0, 0.f, 0.f,
-            1.0f, -1.0f, 0, 1f, 0.f,
-            -1.0f,  1.0f, 0, 0.f, 1.f,
-            1.0f,  1.0f, 0, 1f, 1.f,
+            -1.0f, -1.0f, 0, 0.f, 1.f,
+            1.0f, -1.0f, 0, 1f, 1.f,
+            -1.0f,  1.0f, 0, 0.f, 0.f,
+            1.0f,  1.0f, 0, 1f, 0.f,
     };
 
 
