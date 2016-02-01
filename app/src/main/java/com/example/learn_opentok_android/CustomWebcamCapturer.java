@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import com.opentok.android.BaseVideoCapturer;
+import com.serenegiant.usb.UVCCamera;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -23,8 +25,8 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
     // changes
 
     private final static int PIXEL_FORMAT = ImageFormat.NV21;
-    private final static int PREFERRED_CAPTURE_WIDTH = 640;
-    private final static int PREFERRED_CAPTURE_HEIGHT = 480;
+    private final static int PREFERRED_CAPTURE_WIDTH = UVCCamera.DEFAULT_PREVIEW_WIDTH;
+    private final static int PREFERRED_CAPTURE_HEIGHT = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
 
     private Long lastCaptureFrame = 0L;
     private Long currentCaptureFrame = 0L;
@@ -52,17 +54,15 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
     }
 
     public void addFrame(byte[] data){
-        Log.d(LOGTAG, "addFrame");
 
         if(data == null){
-            Log.d(LOGTAG, "hasFrame DATA NULL");
+//            Log.d(LOGTAG, "hasFrame \ NULL");
             return;
         }
 
         mPreviewBufferLock.lock();
         if(data != null){
             if (isCaptureRunning) {
-                Log.d(LOGTAG, "Has frame");
                 provideByteArrayFrame(data, NV21, mCaptureWidth,
                         mCaptureHeight, 0, false);
             }

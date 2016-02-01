@@ -359,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
                 byte[] capArray = null;
                 imageArrayLock.lock();
-                Log.d(TAG, "MyThread run() Lock");
+
                 if(lastCameraTime != imageTime){
                     lastCameraTime = System.currentTimeMillis();
                     capArray = imageArray;
@@ -421,7 +421,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             if(imageArray == null){
                 Log.d(TAG, "onFrame Lock NULL");
             }else{
-                Log.d(TAG, "onFrame Lock ");
+//                Log.d(TAG, "onFrame Lock ");
             }
 
             imageTime = System.currentTimeMillis();
