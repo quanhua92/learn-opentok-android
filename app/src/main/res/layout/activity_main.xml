@@ -1,41 +1,23 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:keepScreenOn="true"
+    >
 
-        <FrameLayout
-            android:layout_width="300dp"
-            android:layout_height="200dp"
-            android:id="@+id/subscriber_container"></FrameLayout>
+    <com.serenegiant.usb.UVCCameraTextureView
+        android:id="@+id/UVCCameraTextureView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 
-        <SurfaceView
-            android:id="@+id/camera_surface_view"
-            android:layout_width="300dp"
-            android:layout_height="200dp" />
-
-        <ImageButton
-            android:id="@+id/camera_button"
-            android:layout_width="@dimen/button_size"
-            android:layout_height="@dimen/button_size"
-            android:contentDescription="@string/camera"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_camera" />
-
-        <FrameLayout
-            android:layout_width="@dimen/publisher_width"
-            android:layout_height="@dimen/publisher_height"
-            android:id="@+id/publisher_container"
-            android:layout_gravity="bottom|end"
-            android:layout_marginBottom="@dimen/publisher_bottom_margin"
-            android:layout_marginEnd="@dimen/publisher_right_margin"
-            android:padding="@dimen/publisher_padding"
-            android:background="@color/publisher_border_color" />
-
-        <TextView
-            android:id="@+id/errorTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-</LinearLayout>
+    <Button
+        android:id="@+id/btnCapture"
+        android:layout_width="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_height="wrap_content"
+        android:text="Capture"
+        />
+</RelativeLayout>
