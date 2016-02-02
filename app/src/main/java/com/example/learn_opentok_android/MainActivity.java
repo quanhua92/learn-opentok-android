@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     private void initializePublisher() {
         mPublisher = new Publisher(this);
         mPublisher.setCapturer(new CustomWebcamCapturer(this));
+        mPublisher.setPublishAudio(false);
         mPublisher.setPublisherListener(this);
         mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
@@ -241,6 +242,8 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     protected void onPause() {
         super.onPause();
+        mSession.onPause();
+        mSession.disconnect();
         mUSBMonitor.unregister();
     }
 
