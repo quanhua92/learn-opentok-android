@@ -1,7 +1,7 @@
 package com.example.learn_opentok_android;
 
 import android.content.Context;
-import android.graphics.ImageFormat;
+import android.media.Image;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
@@ -24,8 +24,9 @@ public class CustomWebcamCapturer extends BaseVideoCapturer {
     // surface
     // changes
 
-    private final static int PIXEL_FORMAT = ImageFormat.NV21;
-    private final static int PREFERRED_CAPTURE_WIDTH = UVCCamera.DEFAULT_PREVIEW_WIDTH;
+    private final static int PIXEL_FORMAT = NV21;
+
+    private final static int PREFERRED_CAPTURE_WIDTH = UVCCamera.DEFAULT_PREVIEW_WIDTH * 2;
     private final static int PREFERRED_CAPTURE_HEIGHT = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
 
     private Long lastCaptureFrame = 0L;

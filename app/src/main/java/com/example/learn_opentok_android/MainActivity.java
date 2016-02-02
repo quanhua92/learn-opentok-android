@@ -31,6 +31,8 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.usb.UVCCameraTextureView;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     private CustomWebcamCapturer mCapturer;
 
     private Thread streamingThread;
+
     /**
      * USB Camera Parameters
      */
@@ -244,28 +247,47 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
     class MyThread implements Runnable {
         private CustomWebcamCapturer mCapturer;
-        private Long lastCameraTime = 0L;
+        private Long lastCameraTimeLeft = 0L;
+        private Long lastCameraTimeRight = 0L;
         public MyThread(CustomWebcamCapturer cap) {
             mCapturer = cap;
         }
 
         @Override
         public void run() {
+            int old_width = UVCCamera.DEFAULT_PREVIEW_WIDTH, old_height = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
+            int new_width = old_width * 2;
+            int new_height = old_height;
+
+            byte[] data_new = new byte[new_width * new_height * 3 / 2];
+            byte[] data_left = null;
+            byte[] data_right = null;
             while(true){
 
                 if(Thread.interrupted()){
                     Log.e(TAG, "Thread is interrupted");
                 }
 
-                byte[] capArray = null;
                 imageLeftArrayLock.lock();
 
-                if(lastCameraTime != imageLeftTime){
-                    lastCameraTime = System.currentTimeMillis();
-                    capArray = imageLeftArray;
+                if(lastCameraTimeLeft != imageLeftTime){
+                    lastCameraTimeLeft = System.currentTimeMillis();
+                    data_left = imageLeftArray;
                 }
                 imageLeftArrayLock.unlock();
-                mCapturer.addFrame(capArray);
+
+                imageRightArrayLock.lock();
+
+                if(lastCameraTimeRight != imageRightTime){
+                    lastCameraTimeRight = System.currentTimeMillis();
+                    data_right = imageRightArray;
+                }
+                imageRightArrayLock.unlock();
+
+
+                mergeLeftRight(data_left, data_right, data_new, old_width, new_width, old_height);
+
+                mCapturer.addFrame(data_new);
                 try {
                     Thread.sleep(30);
                 } catch (InterruptedException e) {
@@ -297,6 +319,15 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 //                Log.d(TAG, "onFrame Left Lock ");
             }
 
+
+            ArrayUtils.reverse(imageLeftArray);
+            // swap uv channel
+            for (int i = 0; i < UVCCamera.DEFAULT_PREVIEW_WIDTH * UVCCamera.DEFAULT_PREVIEW_HEIGHT * 1 / 2; i += 2) {
+                byte t = imageLeftArray[i];
+                imageLeftArray[i] = imageLeftArray[i + 1];
+                imageLeftArray[i + 1] = t;
+            }
+
             imageLeftTime = System.currentTimeMillis();
             imageLeftArrayLock.unlock();
         }
@@ -322,6 +353,14 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 //                Log.d(TAG, "onFrame Right Lock ");
             }
 
+            ArrayUtils.reverse(imageRightArray);
+            // swap uv channel
+            for (int i = 0; i < UVCCamera.DEFAULT_PREVIEW_WIDTH * UVCCamera.DEFAULT_PREVIEW_HEIGHT * 1 / 2; i += 2) {
+                byte t = imageRightArray[i];
+                imageRightArray[i] = imageRightArray[i + 1];
+                imageRightArray[i + 1] = t;
+            }
+
             imageRightTime = System.currentTimeMillis();
             imageRightArrayLock.unlock();
         }
@@ -339,12 +378,12 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
             Log.d(TAG, "prepareCamera: initialize & register UsbCameraManager");
             mUsbCameraManager = new USBCameraManager(this, detachCallback);
-            mUsbCameraManager.setImageFormat(UVCCamera.PIXEL_FORMAT_YUV420SP);
+            mUsbCameraManager.setImageFormat(UVCCamera.PIXEL_FORMAT_NV21);
             mUsbCameraManager.setPreviewDisplay(mUVCCameraView);
             mUsbCameraManager.setLeftFrameCallback(mIFrameLeftCallback);
 //            mUsbCameraManager.setLeftPreviewCallback(mIPreviewCallbackLeft);
 //            mUsbCameraManager.toggleRightPreviewTexture(true);
-//            mUsbCameraManager.setRightFrameCallback(mIFrameRightCallback);
+            mUsbCameraManager.setRightFrameCallback(mIFrameRightCallback);
 //            mUsbCameraManager.setRightPreviewCallback(mIPreviewCallbackRight);
             mUsbCameraManager.register();
         }
@@ -365,4 +404,54 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             Log.e(TAG, "detach while recording");
         }
     };
+
+    private void mergeLeftRight(byte[] data_left, byte[] data_right, byte[] nv21Data, int old_width, int new_width, int height) {
+
+        if (data_left == null || data_right == null) return;
+
+        /**
+         * copy left data
+         */
+        int j = 0;
+        int length = old_width;
+        // get y channel
+        for(int i = height * 1/2 ; i < height * 3/2; i ++){
+            int srcPos = i * old_width;
+            int destPos = j * new_width;
+            System.arraycopy(data_left, srcPos, nv21Data, destPos, length);
+
+            j++;
+        }
+
+        // get uv channel
+        for(int i = 0 ; i < height * 1/2; i ++){
+            int srcPos = i * old_width;
+            int destPos = j * new_width;
+            System.arraycopy(data_left, srcPos, nv21Data, destPos, length);
+
+            j++;
+        }
+
+        /**
+         * copy right data
+         */
+        // get y channel
+        j = 0;
+        for(int i = height * 1/2 ; i < height * 3/2; i ++){
+            int srcPos = i * old_width;
+            int destPos = j * new_width + old_width;
+            System.arraycopy(data_right, srcPos, nv21Data, destPos, length);
+
+            j++;
+        }
+
+        // get uv channel
+        for(int i = 0 ; i < height * 1/2; i ++){
+            int srcPos = i * old_width;
+            int destPos = j * new_width + old_width;
+            System.arraycopy(data_right, srcPos, nv21Data, destPos, length);
+
+            j++;
+        }
+    }
 }
