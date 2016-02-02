@@ -135,7 +135,6 @@ public class USBCameraManager {
                 mCameraLeft.startPreview();
             }
 
-
             if(mCameraRight != null){
                 mCameraRight.startPreview();
             }
@@ -479,7 +478,7 @@ public class USBCameraManager {
             synchronized (mSync) {
                 if (isActiveLeft && !isPreviewLeft) {
                     mCameraLeft.setPreviewDisplay(mPreviewSurfaceLeft);
-                    mCameraLeft.startPreview();
+//                    mCameraLeft.startPreview();
                     isPreviewLeft = true;
                 }
             }
@@ -488,7 +487,7 @@ public class USBCameraManager {
             synchronized (mSync) {
                 if (isActiveRight && !isPreviewRight) {
                     mCameraRight.setPreviewDisplay(mPreviewSurfaceRight);
-                    mCameraRight.startPreview();
+//                    mCameraRight.startPreview();
                     isPreviewRight = true;
                 }
             }

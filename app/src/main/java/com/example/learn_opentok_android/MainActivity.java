@@ -48,14 +48,14 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
 
     private Publisher mPublisher;
-    private Subscriber mSubscriber;
+//    private Subscriber mSubscriber;
 
     private FrameLayout mPublisherViewContainer;
     private FrameLayout mSubscriberViewContainer;
 
     private CustomWebcamCapturer mCapturer;
 
-
+    private Thread streamingThread;
     /**
      * USB Camera Parameters
      */
@@ -86,7 +86,8 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
                     mCapturer = (CustomWebcamCapturer) mPublisher.getCapturer();
                     mCapturer.addFrame(null);
 
-                    new Thread(new MyThread(mCapturer)).start();
+                    streamingThread = new Thread(new MyThread(mCapturer));
+                    streamingThread.start();
 
                     mSession.publish(mPublisher);
                     Toast.makeText(getApplicationContext(), "publish ok", Toast.LENGTH_SHORT).show();
@@ -157,26 +158,21 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TAG, "Stream Received");
-
-        if (mSubscriber == null) {
-            mSubscriber = new Subscriber(this, stream);
-            mSubscriber.setSubscriberListener(this);
-            mSubscriber.setSubscribeToVideo(false);
-            mSubscriber.setSubscribeToAudio(false);
-            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                    BaseVideoRenderer.STYLE_VIDEO_FILL);
-            mSession.subscribe(mSubscriber);
-        }
+//
+//        if (mSubscriber == null) {
+//            mSubscriber = new Subscriber(this, stream);
+//            mSubscriber.setSubscriberListener(this);
+//            mSubscriber.setSubscribeToVideo(false);
+//            mSubscriber.setSubscribeToAudio(false);
+//            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+//                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+//            mSession.subscribe(mSubscriber);
+//        }
     }
 
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TAG, "Stream Dropped");
-
-        if (mSubscriber != null) {
-            mSubscriber = null;
-            mSubscriberViewContainer.removeAllViews();
-        }
     }
 
     @Override
@@ -232,6 +228,10 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             releaseCamera();
         }
 
+        if (streamingThread != null){
+            streamingThread.interrupt();
+        }
+
         mSession.onPause();
         mSession.disconnect();
     }
@@ -253,21 +253,24 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         public void run() {
             while(true){
 
+                if(Thread.interrupted()){
+                    Log.e(TAG, "Thread is interrupted");
+                }
+
                 byte[] capArray = null;
                 imageLeftArrayLock.lock();
 
                 if(lastCameraTime != imageLeftTime){
                     lastCameraTime = System.currentTimeMillis();
                     capArray = imageLeftArray;
-
-                    Log.d(TAG, "capArray = imageLeft " + capArray[0]);
                 }
                 imageLeftArrayLock.unlock();
                 mCapturer.addFrame(capArray);
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(30);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    return;
                 }
             }
         }
