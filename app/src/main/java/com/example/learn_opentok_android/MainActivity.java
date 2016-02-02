@@ -120,8 +120,8 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
             mSubscriber.setSubscriberListener(this);
             mSubscriber.setRenderer(new DefaultVideoRender(this));
 //            mSubscriber.setRenderer(new BlackWhiteVideoRender(this));
-            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_FIT,
+                    BaseVideoRenderer.STYLE_VIDEO_FIT);
             mSession.subscribe(mSubscriber);
         }
     }
@@ -175,5 +175,13 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     @Override
     public void onError(SubscriberKit subscriberKit, OpentokError opentokError) {
         logOpenTokError(opentokError);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mSession.onPause();
+        mSession.disconnect();
     }
 }
