@@ -1,10 +1,12 @@
 package com.example.learn_opentok_android;
 
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import com.example.learn_opentok_android.toolkit.DefaultVideoRender;
@@ -18,7 +20,7 @@ import com.opentok.android.OpentokError;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
-public class MainActivity extends AppCompatActivity implements Session.SessionListener, PublisherKit.PublisherListener, SubscriberKit.SubscriberListener{
+public class MainActivity extends Activity implements Session.SessionListener, PublisherKit.PublisherListener, SubscriberKit.SubscriberListener{
 
     public String TAG = MainActivity.class.getSimpleName();
 
@@ -28,10 +30,10 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     private Session mSession;
 
 
-    private Publisher mPublisher;
+//    private Publisher mPublisher;
     private Subscriber mSubscriber;
 
-    private FrameLayout mPublisherViewContainer;
+//    private FrameLayout mPublisherViewContainer;
     private FrameLayout mSubscriberViewContainer;
 
 
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPublisherViewContainer = (FrameLayout)findViewById(R.id.publisher_container);
+//        mPublisherViewContainer = (FrameLayout)findViewById(R.id.publisher_container);
         mSubscriberViewContainer = (FrameLayout)findViewById(R.id.subscriber_container);
 
 
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         mApiKey = ApiConfig.mApiKey;
 
         initializeSession();
-        initializePublisher();
+//        initializePublisher();
     }
 
     private void initializeSession() {
@@ -60,39 +62,17 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
         mSession.connect(mToken);
     }
 
-    private void initializePublisher() {
-        mPublisher = new Publisher(this);
-        mPublisher.setPublisherListener(this);
-        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                BaseVideoRenderer.STYLE_VIDEO_FILL);
-        mPublisherViewContainer.addView(mPublisher.getView());
-    }
+//    private void initializePublisher() {
+//        mPublisher = new Publisher(this);
+//        mPublisher.setPublisherListener(this);
+//        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_FIT,
+//                BaseVideoRenderer.STYLE_VIDEO_FIT);
+//        mPublisherViewContainer.addView(mPublisher.getView());
+//    }
 
     private void logOpenTokError(OpentokError opentokError) {
         Log.e(TAG, "Error Domain: " + opentokError.getErrorDomain().name());
         Log.e(TAG, "Error Code: " + opentokError.getErrorCode().name());
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     /* Session Listener methods */
@@ -101,9 +81,9 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
     public void onConnected(Session session) {
         Log.i(TAG, "Session Connected");
 
-        if (mPublisher != null) {
-            mSession.publish(mPublisher);
-        }
+//        if (mPublisher != null) {
+//            mSession.publish(mPublisher);
+//        }
     }
 
     @Override
@@ -183,5 +163,18 @@ public class MainActivity extends AppCompatActivity implements Session.SessionLi
 
         mSession.onPause();
         mSession.disconnect();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
     }
 }
